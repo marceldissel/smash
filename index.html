@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smash Tier Matcher</title>
+  <style>
+    body {
+      background: #1e1e1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 10px; }
+    .buttons { margin: 20px 0; }
+    button {
+      margin-right: 10px;
+      padding: 10px 15px;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background-color: #666; }
+    .tier { margin-bottom: 30px; }
+    .tier-label { font-size: 22px; margin-bottom: 10px; }
+    .tier-box {
+      border: 2px solid #aaa;
+      border-radius: 10px;
+      background: #2b2b2b;
+      min-height: 150px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      border-radius: 6px;
+      border: 2px solid #555;
+      cursor: grab;
+      background: #111;
+    }
+  </style>
+</head>
+<body>
+  <h1>Super Smash Tier Matcher</h1>
+
+  <div class="buttons">
+    <button onclick="saveTierList()">💾 Save Tier List</button>
+    <button onclick="loadTierList()">📥 Load Tier List</button>
+    <button onclick="resetTierList()">🔄 Reset</button>
+  </div>
+
+  <div class="tier">
+    <div class="tier-label">Alive</div>
+    <div id="alive" class="tier-box" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+  </div>
+
+  <div class="tier">
+    <div class="tier-label">Dead</div>
+    <div id="dead" class="tier-box" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+  </div>
+
+  <script>
+    const characterList = [
+      "100px-Kirby_SSBU.png", "100px-Mario_SSBU.png", "100px-Villager_SSBU.png", "100px-Link_SSBU.png",
+      "100px-Lucario_SSBU.png", "100px-Captain_Falcon_SSBU.png", "100px-Yoshi_SSBU.png", "100px-Pikachu_SSBU.png",
+      "100px-Sheik_SSBU.png", "100px-Jigglypuff_SSBU.png", "100px-Mii_Brawler_SSBU.png", "100px-Piranha_Plant_SSBU.png",
+      "100px-Joker_SSBU.png", "100px-Hero_SSBU.png", "100px-Banjo_&_Kazooie_SSBU.png", "100px-Terry_SSBU.png",
+      "100px-Byleth_SSBU.png", "100px-Min_Min_SSBU.png", "100px-Steve_SSBU.png", "100px-Sephiroth_SSBU.png",
+      "100px-Pyra_SSBU.png", "100px-Kazuya_SSBU.png", "100px-Sora_SSBU.png", "100px-Wii_Fit_Trainer_SSBU.png",
+      "100px-Dr._Mario_SSBU.png", "100px-Inkling_SSBU.png", "100px-Fox_SSBU.png", "100px-Donkey_Kong_SSBU.png",
+      "100px-Pac-Man_SSBU.png", "100px-Olimar_SSBU.png", "100px-Lucina_SSBU.png", "100px-Ness_SSBU.png",
+      "100px-Isabelle_SSBU.png", "100px-Simon_SSBU.png", "100px-Pit_SSBU.png", "100px-Ice_Climbers_SSBU.png",
+      "100px-Bowser_SSBU.png", "100px-Peach_SSBU.png", "100px-Duck_Hunt_SSBU.png", "100px-Pichu_SSBU.png",
+      "100px-Little_Mac_SSBU.png", "100px-Mega_Man_SSBU.png", "100px-Snake_SSBU.png", "100px-Samus_SSBU.png",
+      "100px-Mr._Game_&_Watch_SSBU.png", "100px-Pokémon_Trainer_(solo)_SSBU.png", "100px-Wii_Fit_Trainer_SSBU.png",
+      "100px-Rosalina_&_Luma_SSBU.png", "100px-Shulk_SSBU.png", "100px-Zero_Suit_Samus_SSBU.png",
+      "100px-King_Dedede_SSBU.png", "100px-Falco_SSBU.png", "100px-Mii_Brawler_SSBU.png", "100px-Zelda_SSBU.png",
+      "100px-Sonic_SSBU.png", "100px-Chrom_SSBU.png", "100px-Cloud_SSBU.png", "100px-Bowser_Jr._SSBU.png",
+      "100px-Ganondorf_SSBU.png", "100px-Incineroar_SSBU.png", "100px-Lucina_SSBU.png", "100px-Daisy_SSBU.png",
+      "100px-Wario_SSBU.png", "100px-Ridley_SSBU.png", "100px-Ken_SSBU.png", "100px-Dark_Pit_SSBU.png",
+      "100px-Robin_SSBU.png", "100px-Richter_SSBU.png", "100px-Corrin_SSBU.png", "100px-R.O.B._(JPN)_SSBU.png",
+      "100px-Greninja_SSBU.png", "100px-Wolf_SSBU.png", "100px-Corrin_SSBU.png", "100px-Ike_SSBU.png",
+      "100px-Mewtwo_SSBU.png", "100px-King_K._Rool_SSBU.png", "100px-Meta_Knight_SSBU.png", "100px-Luigi_SSBU.png",
+      "100px-Roy_SSBU.png", "100px-Ness_SSBU.png", "100px-Dark_Samus_SSBU.png", "100px-Palutena_SSBU.png",
+      "100px-Bayonetta_SSBU.png", "100px-Diddy_Kong_SSBU.png", "100px-Ryu_SSBU.png"
+    ];
+
+    const containers = {
+      "alive": document.getElementById("alive"),
+      "dead": document.getElementById("dead")
+    };
+
+    function createIcon(name) {
+      const img = document.createElement("img");
+      img.src = "icons/" + name;
+      img.classList.add("icon");
+      img.id = name;
+      img.draggable = true;
+      img.ondragstart = drag;
+      return img;
+    }
+
+    function initCharacters() {
+      characterList.forEach(name => {
+        const img = createIcon(name);
+        containers["alive"].appendChild(img);
+      });
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    function drag(ev) {
+      ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      const id = ev.dataTransfer.getData("text");
+      const dragged = document.getElementById(id);
+      if (!dragged || !ev.currentTarget.classList.contains("tier-box")) return;
+      if (dragged.parentNode === ev.currentTarget) {
+        const children = Array.from(ev.currentTarget.children);
+        const targetIndex = children.indexOf(ev.target);
+        const draggedIndex = children.indexOf(dragged);
+        if (targetIndex >= 0 && draggedIndex !== targetIndex) {
+          if (targetIndex > draggedIndex) {
+            ev.target.after(dragged);
+          } else {
+            ev.target.before(dragged);
+          }
+        }
+      } else {
+        ev.currentTarget.appendChild(dragged);
+      }
+    }
+
+    function saveTierList() {
+      const saveData = {};
+      for (const key in containers) {
+        saveData[key] = Array.from(containers[key].children).map(el => el.id);
+      }
+      localStorage.setItem("smashTierList", JSON.stringify(saveData));
+      alert("Tier list saved!");
+    }
+
+    function loadTierList() {
+      const data = JSON.parse(localStorage.getItem("smashTierList"));
+      if (!data) {
+        alert("No saved tier list found.");
+        return;
+      }
+      for (const key in containers) {
+        containers[key].innerHTML = "";
+      }
+      for (const key in data) {
+        data[key].forEach(name => {
+          const img = createIcon(name);
+          containers[key].appendChild(img);
+        });
+      }
+      alert("Tier list loaded!");
+    }
+
+    initCharacters();
+
+    function resetTierList() {
+      for (const key in containers) {
+        containers[key].innerHTML = "";
+      }
+      initCharacters();
+      alert("Tier list has been reset.");
+    }
+  </script>
+</body>
+</html>
