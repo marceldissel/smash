@@ -1,0 +1,2 @@
+# smash
+Charlies nuzlocke help
